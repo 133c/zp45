@@ -1,11 +1,10 @@
 <template>
-  <div id="app">
-      <router-view></router-view>
+  <div>
+      这是登录
   </div>
 </template>
 
 <script>
-
 export default {
 
 }
