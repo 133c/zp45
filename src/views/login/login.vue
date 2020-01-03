@@ -10,38 +10,47 @@
         <div class="subtitle">用户登录</div>
       </div>
       <!-- 表单 -->
-      <el-form ref="form" :model="form" class="form">
+      <el-form
+        :model="ruleForm"
+        :rules="rules"
+        ref="ruleForm"
+        label-width="43px"
+        class="demo-ruleForm login-form"
+      >
+        <!-- 手机号 -->
         <el-form-item prop="phone">
-          <el-input v-model="logForm.phone" placeholder="请输入手机号" prefix-icon="el-icon-user"></el-input>
+          <el-input v-model="ruleForm.name" prefix-icon="el-icon-user" placeholder="请输入手机号码"></el-input>
         </el-form-item>
+        <!-- 密码 -->
         <el-form-item prop="password">
-          <el-input
-            show-password
-            v-model="logForm.password"
-            placeholder="请输入密码"
-            prefix-icon="el-icon-lock"
-          ></el-input>
+          <el-input v-model="ruleForm.password" prefix-icon="el-icon-lock" placeholder="请输入密码"></el-input>
         </el-form-item>
+        <!-- 验证码 -->
         <el-form-item prop="code">
           <el-row>
-            <el-col :span="17">
-              <el-input placeholder="请输入验证码" v-model="logForm.code" prefix-icon="el-icon-key"></el-input>
+            <!-- 验证码 -->
+            <el-col :span="18">
+              <el-input prefix-icon="el-icon-key" v-model="ruleForm.code" placeholder="请输入验证码"></el-input>
             </el-col>
-            <el-col :span="7">
-              <img class="captcha" @click="randomLoginCaptcha" src="actions" alt />
+            <el-col class="code-col" :span="6">
+              <!-- 验证码 -->
+              <!-- <img src="../../assets/code.jpg" alt="" /> -->
+              <img :src="codeUrl" alt />
             </el-col>
           </el-row>
         </el-form-item>
+        <!-- 协议 -->
         <el-form-item>
-          <el-checkbox v-model="checked">
+          <el-checkbox v-model="ruleForm.checked">
             我已阅读并同意
             <el-link type="primary">用户协议</el-link>和
             <el-link type="primary">隐私条款</el-link>
           </el-checkbox>
         </el-form-item>
+
         <el-form-item>
-          <el-button type="primary" @click="onSubmit" class="add">登录</el-button>
-          <el-button type="primary" class="cancel">注册</el-button>
+          <el-button class="login-btn" type="primary" @click="submitForm('ruleForm')">登录</el-button>
+          <el-button class="login-btn reset-btn" type="primary" @click="resetForm('ruleForm')">注册</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -52,15 +61,46 @@
 
 <script>
 export default {
+  name:"login",
   data() {
     return {
-      logForm: {
-        phone: "",
+      codeUrl: process.env.VUE_APP_BASEURL + "/captcha?type=login",
+      ruleForm: {
+        name: "",
         password: "",
         code: "",
         checked: false
+      },
+      rules: {
+        phone: [
+          { required: true, message: "请输入手机号", trigger: "blur" },
+          { min: 6, max: 16, message: "长度在 3 到 5 个字符", trigger: "blur" }
+        ],
+        password: [
+          { required: true, message: "请输入密码", trigger: "blur" },
+          { min: 6, max: 16, message: "长度在 3 到 5 个字符", trigger: "blur" }
+        ],
+        code: [
+          { required: true, message: "请输入验证码", trigger: "blur" },
+          { min: 4, max: 4, message: "长度在 3 到 5 个字符", trigger: "blur" }
+        ]
       }
     };
+  },
+  methods: {
+    submitForm(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          window.console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    resetForm(formName) {
+      this.$refs[formName].resetFields();
+    }
   }
 };
 </script>
@@ -114,17 +154,36 @@ export default {
       color: #0c0c0c;
     }
   }
-  .form {
-    padding: 0 41px 0 43px;
-    .add {
-      width: 100%;
-      margin-bottom: 26px;
+  // 登录表单
+  .login-form {
+    padding-right: 41px;
+    margin-top: 27px;
+    // 栅格 验证码
+    .code-col {
+      height: 40px;
+      img {
+        width: 100%;
+        height: 100%;
+        // 小手手
+        cursor: pointer;
+      }
     }
-    .el-button + .el-button,
-    .cancel {
-      margin-left: 0;
-      width: 100%;
+    // 更高的文本框
+    .high-input > input {
+      height: 45px;
+      line-height: 45px;
     }
+  }
+  // 表单内部的 按钮
+  .login-btn {
+    width: 100%;
+    margin-left: 0;
+  }
+  .el-button + .el-button {
+    margin-left: 0;
+  }
+  .reset-btn {
+    margin-top: 28px;
   }
 }
 .login-container .bg {
