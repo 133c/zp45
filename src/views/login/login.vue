@@ -19,11 +19,16 @@
       >
         <!-- 手机号 -->
         <el-form-item prop="phone">
-          <el-input v-model="ruleForm.name" prefix-icon="el-icon-user" placeholder="请输入手机号码"></el-input>
+          <el-input v-model="ruleForm.phone" prefix-icon="el-icon-user" placeholder="请输入手机号码"></el-input>
         </el-form-item>
         <!-- 密码 -->
         <el-form-item prop="password">
-          <el-input v-model="ruleForm.password" prefix-icon="el-icon-lock" placeholder="请输入密码"></el-input>
+          <el-input
+            show-password
+            v-model="ruleForm.password"
+            prefix-icon="el-icon-lock"
+            placeholder="请输入密码"
+          ></el-input>
         </el-form-item>
         <!-- 验证码 -->
         <el-form-item prop="code">
@@ -35,7 +40,7 @@
             <el-col class="code-col" :span="6">
               <!-- 验证码 -->
               <!-- <img src="../../assets/code.jpg" alt="" /> -->
-              <img :src="codeUrl" alt />
+              <img @click="changeCode" :src="codeUrl" alt />
             </el-col>
           </el-row>
         </el-form-item>
@@ -60,46 +65,98 @@
 </template>
 
 <script>
+import axios from "axios";
+const validatePhone = (rule, value, callback) => {
+  if (value === "") {
+    callback(new Error("手机号不能为空"));
+  } else {
+    // 定义正则表达式
+    const reg = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+    // 验证
+    if (reg.test(value) == true) {
+      callback();
+    } else {
+      // 错
+      callback(new Error("手机号可能写错了呢"));
+    }
+  }
+};
 export default {
-  name:"login",
+  name: "login",
   data() {
     return {
       codeUrl: process.env.VUE_APP_BASEURL + "/captcha?type=login",
       ruleForm: {
-        name: "",
+        phone: "",
         password: "",
         code: "",
         checked: false
       },
       rules: {
         phone: [
-          { required: true, message: "请输入手机号", trigger: "blur" },
-          { min: 6, max: 16, message: "长度在 3 到 5 个字符", trigger: "blur" }
+          {
+            validator: validatePhone,
+            trigger: "blur"
+          }
         ],
         password: [
           { required: true, message: "请输入密码", trigger: "blur" },
-          { min: 6, max: 16, message: "长度在 3 到 5 个字符", trigger: "blur" }
+          {
+            min: 6,
+            max: 16,
+            message: "长度在 6 到 16 个字符",
+            trigger: "change"
+          }
         ],
         code: [
           { required: true, message: "请输入验证码", trigger: "blur" },
-          { min: 4, max: 4, message: "长度在 3 到 5 个字符", trigger: "blur" }
+          { min: 4, max: 4, message: "长度4个字符", trigger: "change" }
         ]
       }
     };
   },
   methods: {
     submitForm(formName) {
+      if (this.ruleForm.checked == false) {
+        this.$message.warning("请先勾选用户协议");
+        return;
+      }
+      // 等同于 this.$refs.ruleForm
       this.$refs[formName].validate(valid => {
         if (valid) {
-          alert("submit!");
+          // this.$message.success("验证成功");
+          // 调用接口
+          axios({
+            url: process.env.VUE_APP_BASEURL + "/login",
+            method: "post",
+            // 跨域 是否携带 cookie
+            withCredentials: true,
+            data: {
+              phone: this.ruleForm.phone,
+              password: this.ruleForm.password,
+              code: this.ruleForm.code
+            }
+          }).then(res => {
+            window.console.log('00000000');
+            if (res.data.code === 202) {
+              // 错误
+              this.$message.error(res.data.message);
+            } else if (res.data.code === 200) {
+              this.$message.success("老铁，你可算回来啦！！！");
+            }
+          });
         } else {
-          window.console.log("error submit!!");
+          this.$message.error("格式不对哦，检查一下呗！");
           return false;
         }
       });
     },
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+    changeCode() {
+      this.codeUrl =
+        process.env.VUE_APP_BASEURL + "/captcha?type=login&t=" + Date.now();
     }
   }
 };
@@ -186,6 +243,6 @@ export default {
     margin-top: 28px;
   }
 }
-.login-container .bg {
+.bg {
 }
 </style>
